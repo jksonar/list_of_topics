@@ -1,6 +1,3 @@
-Perfect — you’re asking for a **comprehensive learning guide** to Ansible. I’ll answer each question in a structured way, starting from **basic** to **advanced & scenario-based** concepts. I’ll keep explanations clear, give real-world examples, and highlight key commands or practices where useful.
-
----
 
 # 📘 Basic Ansible Concepts
 
