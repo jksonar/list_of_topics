@@ -360,7 +360,79 @@ ansible-galaxy collection install community.general
 * Use `ansible-lint` for playbook security best practices.
 
 ---
+Perfect 👍 You can automate this with **Ansible** by using the `command` or `openssl_certificate` module.
+Since you want a **self-signed certificate non-interactively**, here are two approaches:
 
-✅ This gives you **end-to-end coverage** of Ansible concepts — from beginner to expert.
+---
 
-Do you want me to also create a **step-by-step hands-on practice roadmap** (with labs/commands) so you can *learn by doing*?
+### ✅ Option 1: Using `command` module
+
+Straight execution of your `openssl` command:
+
+```yaml
+- name: Generate self-signed SSL certificate
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create SSL directory
+      file:
+        path: /etc/httpd/ssl
+        state: directory
+        mode: '0755'
+
+    - name: Generate self-signed certificate with OpenSSL
+      command: >
+        openssl req -x509 -nodes -days 365
+        -newkey rsa:2048
+        -keyout /etc/httpd/ssl/{{ DomainName }}.key
+        -out /etc/httpd/ssl/{{ DomainName }}.crt
+        -subj "/C=IN/ST=Gujarat/L=Ahmedabad/O=MyCompany/OU=IT/CN={{ DomainName}}/emailAddress=admin@{{ DomainName }}"
+      args:
+        creates: /etc/httpd/ssl/{{ DomainName }}.crt
+```
+
+* `creates:` ensures the task runs only once (idempotency).
+* `{{ DomainName }}` should be set in `vars:` or inventory.
+
+---
+
+### ✅ Option 2: Using Ansible’s `openssl_certificate` module
+
+Cleaner and more Ansible-native:
+
+```yaml
+- name: Generate self-signed SSL certificate with Ansible module
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create SSL directory
+      file:
+        path: /etc/httpd/ssl
+        state: directory
+        mode: '0755'
+
+    - name: Generate self-signed certificate
+      community.crypto.openssl_certificate:
+        path: /etc/httpd/ssl/{{ DomainName }}.crt
+        privatekey_path: /etc/httpd/ssl/{{ DomainName }}.key
+        csr_path: /etc/httpd/ssl/{{ DomainName }}.csr
+        provider: selfsigned
+        subject:
+          common_name: "{{ DomainName }}"
+          country_name: "IN"
+          state_or_province_name: "Gujarat"
+          locality_name: "Ahmedabad"
+          organization_name: "MyCompany"
+          organizational_unit_name: "IT"
+          email_address: "admin@{{ DomainName }}"
+        days: 365
+```
+
+⚡ This requires the **`community.crypto`** collection:
+
+```bash
+ansible-galaxy collection install community.crypto
+```
+
+---
+

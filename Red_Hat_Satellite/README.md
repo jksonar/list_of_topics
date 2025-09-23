@@ -296,3 +296,345 @@ hammer content-view version promote --id <cv_version_id> --to-lifecycle-environm
 * Practice `hammer` CLI commands (very common in interviews).
 
 ---
+Got it 👍
+If you want to study **Red Hat Satellite Server**, it helps to break it into **core areas**:
+👉 Content management (repos, packages, errata)
+👉 Hosts lifecycle (registering, provisioning, patching)
+👉 Users & roles (RBAC, organizations, locations)
+👉 Capsule/Smart Proxies (distributed content & services)
+
+Here’s a **cheat sheet of useful commands** you’ll encounter when working with Satellite (uses the `hammer` CLI and some system tools):
+
+---
+
+## 🔹 General Satellite Server Commands
+
+```bash
+# Check Satellite version
+rpm -q satellite
+
+# Check status of Satellite services
+satellite-maintain service status
+
+# Start/Stop/Restart all services
+satellite-maintain service restart
+satellite-maintain service stop
+satellite-maintain service start
+
+# Run health check
+satellite-maintain health check
+```
+
+---
+
+## 🔹 Hammer CLI (main Satellite management tool)
+
+### Authentication & Info
+
+```bash
+# Test hammer connection
+hammer ping
+
+# Check current user info
+hammer user info --login admin
+```
+
+### Organizations & Locations
+
+```bash
+# List organizations
+hammer organization list
+
+# List locations
+hammer location list
+```
+
+### Content Views & Repositories
+
+```bash
+# List available repositories
+hammer repository list --organization "MyOrg"
+
+# Sync a repository
+hammer repository synchronize --name "BaseOS" --organization "MyOrg" --product "RHEL"
+
+# List content views
+hammer content-view list --organization "MyOrg"
+
+# Publish a content view
+hammer content-view publish --name "RHEL-CV" --organization "MyOrg"
+
+# Promote content view to lifecycle environment
+hammer content-view version promote --content-view "RHEL-CV" --version "1.0" \
+  --to-lifecycle-environment "Production" --organization "MyOrg"
+```
+
+### Lifecycle Environments
+
+```bash
+# List lifecycle environments
+hammer lifecycle-environment list --organization "MyOrg"
+```
+
+### Hosts
+
+```bash
+# List registered hosts
+hammer host list --organization "MyOrg"
+
+# Check host details
+hammer host info --name host1.example.com
+
+# Assign a content view to host
+hammer host update --name host1.example.com \
+  --content-view "RHEL-CV" \
+  --lifecycle-environment "Production"
+```
+
+### Activation Keys
+
+```bash
+# List activation keys
+hammer activation-key list --organization "MyOrg"
+
+# Create activation key
+hammer activation-key create --name "RHEL-Key" --organization "MyOrg" \
+  --lifecycle-environment "Development" --content-view "RHEL-CV"
+```
+
+---
+
+## 🔹 Katello & Capsule Related
+
+```bash
+# Check subscription status
+subscription-manager status
+
+# List consumed subscriptions
+subscription-manager list --consumed
+
+# Capsule sync
+hammer capsule content synchronize --name "capsule01.example.com"
+```
+
+---
+
+## 🔹 Backup & Restore
+
+```bash
+# Create backup
+satellite-maintain backup online /backup/location
+
+# Restore backup
+satellite-maintain restore /backup/location
+```
+
+---
+
+✅ **Tip for studying**:
+
+* Practice in a lab environment (at least 2 VMs: one Satellite + one client/host).
+* Focus on **content lifecycle**: Import repos → Create content views → Publish & Promote → Register hosts → Apply updates.
+* The `hammer` command is the most useful for day-to-day management.
+
+---
+Perfect 👍 You’ll spend most of your time with **hammer CLI** and **satellite-maintain** on Red Hat Satellite. Let’s extend the list into a **comprehensive CLI reference** with more commands grouped by task area:
+
+---
+
+# 🔹 Satellite CLI Commands (Extended Cheat Sheet)
+
+---
+
+## 📌 System / Maintenance
+
+```bash
+# Check Satellite version and build
+satellite-installer --version
+
+# Check enabled repos on Satellite
+yum repolist enabled
+
+# Verify system status
+satellite-maintain health check
+
+# Check logs
+journalctl -u tomcat
+journalctl -u foreman
+journalctl -u dynflow-sidekiq@*
+
+# Cleanup orphaned tasks
+foreman-rake foreman_tasks:cleanup TASK_SEARCH='state = stopped' DAYS_TO_KEEP=7
+```
+
+---
+
+## 📌 Hammer CLI – Organizations, Locations, Users
+
+```bash
+# Create organization
+hammer organization create --name "Finance" --label finance
+
+# Create location
+hammer location create --name "Mumbai-DC"
+
+# List users
+hammer user list
+
+# Create user
+hammer user create --login satadmin --mail admin@example.com --password redhat \
+  --organization-ids 1 --location-ids 1
+```
+
+---
+
+## 📌 Content & Repositories
+
+```bash
+# List products
+hammer product list --organization "MyOrg"
+
+# Create product
+hammer product create --name "RHEL" --organization "MyOrg"
+
+# Create repository
+hammer repository create --name "RHEL8-BaseOS" \
+  --content-type yum --product "RHEL" \
+  --url "http://cdn.redhat.com/content/dist/rhel8/8/x86_64/baseos/os" \
+  --organization "MyOrg"
+
+# Sync all repos of an org
+hammer repository synchronize --organization "MyOrg" --async --id 1
+```
+
+---
+
+## 📌 Content Views & Composite Content Views
+
+```bash
+# Publish new version of content view
+hammer content-view publish --name "RHEL-CV" --organization "MyOrg" --description "Updated CV"
+
+# Promote version to next environment
+hammer content-view version promote \
+  --content-view "RHEL-CV" --version 2.0 \
+  --to-lifecycle-environment "QA" --organization "MyOrg"
+
+# Create composite content view
+hammer content-view create --composite --name "FullStack" --organization "MyOrg"
+
+# Add content view to composite
+hammer content-view component add \
+  --composite-content-view "FullStack" \
+  --organization "MyOrg" --content-view "RHEL-CV" --latest
+```
+
+---
+
+## 📌 Hosts & Host Groups
+
+```bash
+# Register a new host (client-side)
+subscription-manager register --org="MyOrg" --activationkey="RHEL-Key"
+
+# List all hosts
+hammer host list --organization "MyOrg"
+
+# Update host parameters
+hammer host update --name "host1.example.com" --comment "Production server"
+
+# List host groups
+hammer host-group list --organization "MyOrg"
+
+# Create host group
+hammer host-group create --name "RHEL8-Prod" --organization "MyOrg" \
+  --lifecycle-environment "Production" --content-view "RHEL-CV"
+```
+
+---
+
+## 📌 Subscriptions & Activation Keys
+
+```bash
+# List subscriptions in org
+hammer subscription list --organization "MyOrg"
+
+# Add subscription to activation key
+hammer activation-key add-subscription \
+  --name "RHEL-Key" --organization "MyOrg" --subscription-id 3
+
+# List subscriptions consumed by host
+hammer host subscription list --host host1.example.com
+```
+
+---
+
+## 📌 Errata & Patching
+
+```bash
+# List errata available
+hammer erratum list --organization "MyOrg"
+
+# Apply errata to host
+hammer host errata apply --host "host1.example.com" --errata-id "RHBA-2025:1234"
+
+# List errata applicable to a host
+hammer host errata list --host "host1.example.com"
+```
+
+---
+
+## 📌 Capsule / Smart Proxy
+
+```bash
+# List capsules
+hammer capsule list
+
+# Sync capsule content
+hammer capsule content synchronize --id 2
+
+# Check capsule features
+hammer capsule info --id 2
+```
+
+---
+
+## 📌 Tasks & Jobs
+
+```bash
+# List tasks
+hammer task list
+
+# Show task details
+hammer task info --id <TASK_ID>
+
+# Rerun failed tasks
+foreman-rake foreman_tasks:retry_failed
+```
+
+---
+
+## 📌 Backup & Restore
+
+```bash
+# Online backup
+satellite-maintain backup online /backup/location --assumeyes
+
+# Offline backup
+satellite-maintain backup offline /backup/location
+
+# Restore backup
+satellite-maintain restore /backup/location
+```
+
+---
+
+⚡ With these commands, you can:
+
+* **Build full repo lifecycle** → Product → Repository → Sync → Content View → Promote
+* **Manage hosts easily** → Register → Assign CV → Patch → Errata apply
+* **Operate Satellite itself** → Check health, logs, tasks, backups
+
+---
+
+👉 Do you want me to also prepare a **hands-on lab guide** (step-by-step exercises) where you’ll use these commands in sequence (from installing Satellite → creating repos → registering a host → patching it)? That will help you *practice* instead of just memorizing.
