@@ -30,3 +30,10 @@ range, which is then divided into subnets.
 * Utilize the official Amazon VPC User Guide for detailed information.
 * Visualize your VPC components and traffic flow with the "Resource map" feature.
 * Explore video tutorials for visual learning and setup walkthroughs
+
+---
+| VPC Component              | What it is |
+| -------------------------- | ---------- |
+| Virtual Private Cloud(VPC) | A logically isolated virtual network in the AWS cloud |
+| Subnet    | A segment of a VPC's IP address range where you can place groups of isolated resources |
+| Internet Gateway/Egress-only Internet Gateway | The Amazon side of a connection to the public internet for IPv4/IPv6 |
