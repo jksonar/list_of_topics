@@ -2,31 +2,31 @@
 Amazon Virtual Private Cloud (VPC) involves understanding how to create and 
 manage an isolated virtual network within the AWS cloud and the core components that 
 govern its connectivity and security. 
-
+---
 ## Core Concepts and Components
 A VPC creates a logically isolated network environment within AWS. Key components include: 
 
-    * **IP Addressing & CIDR**: VPCs use CIDR blocks (e.g., 10.0.0.0/16) for their IP address 
-    range, which is then divided into subnets.
-    * **Subnets**: Subnets are sections of the VPC's IP range located within an Availability Zone.
-        * **Public Subnet**: Routes traffic to an Internet Gateway (IGW) for internet access (requires a public IP).
-        * **Private Subnet**: Does not have a direct route to an IGW. Instances can access the internet via a NAT Gateway but cannot receive unsolicited inbound internet traffic.
-    * **Internet Gateway (IGW)**: Connects the VPC to the internet.
-    * **NAT Gateway**: Allows instances in private subnets to initiate outbound internet traffic.
-    * **Route Tables**: Control network traffic direction.
-    * **Security Groups**: Instance-level firewalls controlling traffic.
-    * **Network ACLs**: Subnet-level firewalls that are stateless. 
+* **IP Addressing & CIDR**: VPCs use CIDR blocks (e.g., 10.0.0.0/16) for their IP address 
+range, which is then divided into subnets.
+* **Subnets**: Subnets are sections of the VPC's IP range located within an Availability Zone.
+    * **Public Subnet**: Routes traffic to an Internet Gateway (IGW) for internet access (requires a public IP).
+    * **Private Subnet**: Does not have a direct route to an IGW. Instances can access the internet via a NAT Gateway but cannot receive unsolicited inbound internet traffic.
+* **Internet Gateway (IGW)**: Connects the VPC to the internet.
+* **NAT Gateway**: Allows instances in private subnets to initiate outbound internet traffic.
+* **Route Tables**: Control network traffic direction.
+* **Security Groups**: Instance-level firewalls controlling traffic.
+* **Network ACLs**: Subnet-level firewalls that are stateless. 
 
 ## Advanced Connectivity & Security
 
-    * **VPC Peering**: Connects two VPCs privately.
-    * **VPC Endpoints**: Private connections to supported AWS services.
-    * **AWS Site-to-Site VPN**: Connects a VPC to an on-premises data center.
-    * **VPC Flow Logs**: Captures IP traffic data for analysis. 
+* **VPC Peering**: Connects two VPCs privately.
+* **VPC Endpoints**: Private connections to supported AWS services.
+* **AWS Site-to-Site VPN**: Connects a VPC to an on-premises data center.
+* **VPC Flow Logs**: Captures IP traffic data for analysis. 
 
 ## Practical Study Tips
 
-    * Gain hands-on experience by building a VPC using the AWS console or CLI.
-    * Utilize the official Amazon VPC User Guide for detailed information.
-    * Visualize your VPC components and traffic flow with the "Resource map" feature.
-    * Explore video tutorials for visual learning and setup walkthroughs
+* Gain hands-on experience by building a VPC using the AWS console or CLI.
+* Utilize the official Amazon VPC User Guide for detailed information.
+* Visualize your VPC components and traffic flow with the "Resource map" feature.
+* Explore video tutorials for visual learning and setup walkthroughs
