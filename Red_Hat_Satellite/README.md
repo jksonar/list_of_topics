@@ -296,15 +296,13 @@ hammer content-view version promote --id <cv_version_id> --to-lifecycle-environm
 * Practice `hammer` CLI commands (very common in interviews).
 
 ---
-Got it 👍
+# cheat sheet of useful commands
+
 If you want to study **Red Hat Satellite Server**, it helps to break it into **core areas**:
 👉 Content management (repos, packages, errata)
 👉 Hosts lifecycle (registering, provisioning, patching)
 👉 Users & roles (RBAC, organizations, locations)
 👉 Capsule/Smart Proxies (distributed content & services)
-
-Here’s a **cheat sheet of useful commands** you’ll encounter when working with Satellite (uses the `hammer` CLI and some system tools):
-
 ---
 
 ## 🔹 General Satellite Server Commands
@@ -436,9 +434,6 @@ satellite-maintain restore /backup/location
 * Practice in a lab environment (at least 2 VMs: one Satellite + one client/host).
 * Focus on **content lifecycle**: Import repos → Create content views → Publish & Promote → Register hosts → Apply updates.
 * The `hammer` command is the most useful for day-to-day management.
-
----
-Perfect 👍 You’ll spend most of your time with **hammer CLI** and **satellite-maintain** on Red Hat Satellite. Let’s extend the list into a **comprehensive CLI reference** with more commands grouped by task area:
 
 ---
 
@@ -636,5 +631,3 @@ satellite-maintain restore /backup/location
 * **Operate Satellite itself** → Check health, logs, tasks, backups
 
 ---
-
-👉 Do you want me to also prepare a **hands-on lab guide** (step-by-step exercises) where you’ll use these commands in sequence (from installing Satellite → creating repos → registering a host → patching it)? That will help you *practice* instead of just memorizing.
