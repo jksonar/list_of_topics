@@ -32,8 +32,18 @@ range, which is then divided into subnets.
 * Explore video tutorials for visual learning and setup walkthroughs
 
 ---
-| VPC Component              | What it is |
-| -------------------------- | ---------- |
-| Virtual Private Cloud(VPC) | A logically isolated virtual network in the AWS cloud |
-| Subnet    | A segment of a VPC's IP address range where you can place groups of isolated resources |
+| VPC Component                                 | What it is                                    |
+| ----------------------------------------------| ---------------------------------------------- |
+| Virtual Private Cloud(VPC)                    | A logically isolated virtual network in the AWS cloud |
+| Subnet                                        | A segment of a VPC's IP address range where you can place groups of isolated resources |
 | Internet Gateway/Egress-only Internet Gateway | The Amazon side of a connection to the public internet for IPv4/IPv6 |
+| Router                                        | Router interconnect subnets and direct traffic between internet gateways, virtual private gateways,NAT gateways, and subnets|
+|Peering Connection                             |Direct connection between two VPCs|
+|VPC Endpoints                                  |Private connection to public AWS services|
+|NAT Instance                                   |Enables internet access for EC2 instances in private subnets (managed by you)|
+|NAT Gateway                                    |Enables internet access for EC2 instances in private subnets (managed by AWS)|
+|Virtual Private Gateway                        |The Amazon VPC side of a Virtual Private Network (VPN) connection|
+|Customer Gateway                               |Customer side of a VPN connection|
+|AWS Direct Connect                             |High speed,high bandwith,private network connection from customer to aws|
+|Security Group                                 |Instance-level firewall|
+|Network ACL                                    |Subnet-level firewall|
