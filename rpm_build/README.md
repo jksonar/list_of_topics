@@ -1,21 +1,5 @@
-That error means your Jenkins **RPM Sign Plugin** is trying to sign your RPMs but can’t find a valid GPG key in the environment where Jenkins is running. Let’s break down why it happens and how to fix it:
 
----
-
-### Why you’re seeing
-
-```
-java.lang.InterruptedException: No GPG key is available.
-```
-
-* The plugin relies on a **GPG private key** to sign RPMs.
-* Jenkins either:
-
-  * can’t see any imported key in the keyring (`gpg --list-secret-keys` returns empty for the Jenkins user),
-  * or the plugin configuration doesn’t specify which key ID to use,
-  * or Jenkins doesn’t have permission to access the GPG keyring.
-
----
+# 1. Steps for jenkins user to sign user with gpg key.
 
 ### Fix Steps
 
@@ -95,15 +79,15 @@ java.lang.InterruptedException: No GPG key is available.
 ---
 Perfect 👍 — you already have a valid GPG secret key under the **jenkins** user:
 
-* **Key ID (short)**: `B2ED5BE48834D3CA`
-* **Fingerprint (long)**: `97D7B2D962A3E4829879D7C9B2ED5BE48834D3CA`
-* **User ID**: `Suresh Borse <s.borse@direction.biz>`
+* **Key ID (short)**: `B2ED5BE4810473CA`
+* **Fingerprint (long)**: `97D7B20753A3E4829879D7C9B2ED5BE48834D3CA`
+* **User ID**: `Suresh Borse <s.borse@example.biz>`
 
 That means the failure is not because the key doesn’t exist, but because Jenkins (the **RPM Sign Plugin**) doesn’t know how to use it.
 
 ---
 
-### What you need to do:
+# 2. What you need to do:
 
 #### 1. Configure `.rpmmacros`
 
@@ -167,13 +151,235 @@ Run the job again. Now it should find the key and sign.
 
 
 ---
-what is key id 
+# 3. Below is a **step-by-step, clean, production-ready guide** to help you **build your own custom `httpd` RPM** on **AlmaLinux 8/9**.
+After building, you can store this RPM in your internal repository and use it to update all your AlmaLinux servers.
 
+---
+
+### ✅ **1. Install Required Build Tools**
+
+```bash
+sudo dnf groupinstall "Development Tools" -y
+sudo dnf install rpm-build rpmdevtools yum-utils dnf-plugins-core -y
+sudo dnf install pinentry pinentry-curses -y
+```
+
+Create the standard RPM build directories:
+
+```bash
+rpmdev-setuptree
+```
+
+This creates:
+
+```
+~/rpmbuild/
+  ├── SPECS
+  ├── SOURCES
+  ├── RPMS
+  ├── SRPMS
+  ├── BUILD
+  └── BUILDROOT
+```
+
+---
+
+### ✅ **2. Download Apache HTTPD Source Code (SRC.RPM)**
+
+The easiest way to build `httpd` for Alma is to download the official AlmaLinux SRPM and modify/rebuild it.
+
+### For AlmaLinux 9:
+
+```bash
+sudo dnf download --source httpd
+```
+
+You will get something like:
+
+```
+httpd-2.4.57-1.el9.src.rpm
+```
+
+Install the SRPM:
+
+```bash
+rpm -ivh httpd-*.src.rpm
+```
+
+This writes:
+
+* `~/rpmbuild/SPECS/httpd.spec`
+* Tarballs/patches into `~/rpmbuild/SOURCES/`
+
+---
+
+### ✅ **3. Install Build Dependencies**
+
+```bash
+sudo dnf builddep ~/rpmbuild/SPECS/httpd.spec -y
+```
+
+This automatically installs all required packages (APR, PCRE, OpenSSL-devel, etc.)
+
+---
+
+### ✅ **4. (Optional) Modify SPEC File**
+
+Edit the spec file:
+
+```bash
+vim ~/rpmbuild/SPECS/httpd.spec
+```
+
+You can optionally update:
+
+* version
+* patches
+* custom compilation flags
+* custom modules
+* change ServerTokens, ServerSignature defaults
+* disable unwanted modules (mod_ldap, mod_proxy, etc.)
+
+For example, to increase default worker processes, add custom patch, etc.
+
+---
+
+### ✅ **5. Build the RPM**
+
+Use the standard rpmbuild command:
+
+```bash
+rpmbuild -ba ~/rpmbuild/SPECS/httpd.spec
+```
+
+This will generate:
+
+```
+~/rpmbuild/RPMS/x86_64/httpd-*.rpm
+~/rpmbuild/SRPMS/httpd-*.src.rpm
+```
+
+---
+
+### ✅ **6. Install Your Custom HTTPD**
+
+```bash
+sudo rpm -Uvh ~/rpmbuild/RPMS/x86_64/httpd-*.rpm
+```
+
+---
+
+### ✅ **7. (Optional) Create a Local YUM Repository**
+
+If you want all servers to update from your custom httpd RPM:
+
+### Create repo directory:
+
+```bash
+sudo mkdir -p /var/www/html/repo/httpd
+sudo cp ~/rpmbuild/RPMS/x86_64/*.rpm /var/www/html/repo/httpd/
+```
+
+### Generate repo metadata:
+
+```bash
+sudo dnf install createrepo -y
+sudo createrepo /var/www/html/repo/httpd
+```
+
+### Create repo file:
+
+```bash
+sudo tee /etc/yum.repos.d/custom-httpd.repo <<EOF
+[custom-httpd]
+name=Custom HTTPD Repo
+baseurl=http://your-server/repo/httpd
+enabled=1
+gpgcheck=0
+EOF
+```
+
+---
+
+### ✅ **8. Test the Repo**
+
+On any AlmaLinux server:
+
+```bash
+sudo dnf clean all
+sudo dnf repolist
+sudo dnf update httpd
+```
+
+Your custom `httpd` should now be installed.
+
+---
+
+### 🔐 **(Optional) Sign Your RPM with GPG**
+
+If you want secure updates:
+
+### Generate a GPG Key:
+
+```bash
+gpg --full-generate-key
+```
+
+Find key name:
+
+```bash
+gpg --list-keys --keyid-format=long
+```
+
+Add to `~/.rpmmacros`:
+
+```
+%_gpg_name Your-Key-ID-Here
+```
+
+Sign RPM automatically:
+
+```
+echo "%_signature gpg" >> ~/.rpmmacros
+echo "%_gpg_path ~/.gnupg" >> ~/.rpmmacros
+echo "%_gpgbin /usr/bin/gpg" >> ~/.rpmmacros
+echo "%_gpg_digest_algo sha256" >> ~/.rpmmacros
+```
+
+Sign the built RPM:
+
+```bash
+rpm --addsign ~/rpmbuild/RPMS/x86_64/httpd-*.rpm
+```
+
+---
+
+# 🎉 Done!
+
+You now have a **complete custom HTTPD RPM build pipeline**, suitable for enterprise deployment across all your AlmaLinux servers.
+
+---
+
+# ⭐ If you want:
+
+✔ a custom spec file
+✔ a modified httpd including custom modules
+✔ RPM signing fixes (your previous `%_gpg_name` error)
+✔ Jenkins pipeline to build the RPM
+✔ Push RPM to Nexus / Artifactory
+✔ Host a private YUM repo on Apache
+
+Just tell me — I can prepare the complete working setup for you.
+---
+
+# 4. what is key id in the following output
+
+```bash
 pub   rsa3072/4823525D0582CD71 2025-12-10 [SC] [expires: 2026-12-10]
       F768E878CBACF31402308D024823525D0582CD71
 uid                 [ultimate] jay@localhost (local key) <jay@localhost>
 sub   rsa3072/F19BC1ACC97FA1E8 2025-12-10 [E] [expires: 2026-12-10]
-
+```
 ---
 Your **Key ID** and **Fingerprint** are both shown in your output — but they are different things.
 
@@ -181,7 +387,7 @@ Let me break them down clearly:
 
 ---
 
-# ✅ **1. Short Key ID**
+### ✅ **1. Short Key ID**
 
 From this part:
 
@@ -197,7 +403,7 @@ The **short Key ID** is:
 
 ---
 
-# ✅ **2. Long Key ID**
+### ✅ **2. Long Key ID**
 
 The characters after the slash are the **long key ID**:
 
@@ -207,7 +413,7 @@ The characters after the slash are the **long key ID**:
 
 ---
 
-# ✅ **3. Full Fingerprint**
+### ✅ **3. Full Fingerprint**
 
 Below this line:
 
@@ -219,7 +425,7 @@ This is the **full 40-character fingerprint**.
 
 ---
 
-# ⭐ Which one to use in RPM signing?
+### ⭐ Which one to use in RPM signing?
 
 For **~/.rpmmacros**, you MUST use the **full fingerprint**:
 
@@ -237,7 +443,7 @@ Both work, but **full fingerprint is recommended**.
 
 ---
 
-# 🔍 Summary
+### 🔍 Summary
 
 | Type                       | Value                                      |
 | -------------------------- | ------------------------------------------ |
@@ -267,7 +473,7 @@ error: Macro % has illegal name (%define)
 
 ---
 
-# ✅ **Correct ~/.rpmmacros (working example)**
+### ✅ **Correct ~/.rpmmacros (working example)**
 
 Use your **full fingerprint** (recommended):
 
@@ -287,7 +493,7 @@ Or use **long Key ID** (also works):
 
 ---
 
-# 🚀 After adding this, test RPM signing:
+### 🚀 After adding this, test RPM signing:
 
 ```bash
 rpm --addsign /path/to/your.rpm
@@ -307,10 +513,10 @@ your.rpm: rsa sha256 (md5) pgp md5 OK
 
 ---
 
-# 👍 Your file is almost correct — just add the `%_gpg_name` line!
+# 5. 👍 Your file is almost correct — just add the `%_gpg_name` line!
 
 If you want, I can also help you automate RPM signing in Jenkins or while building `httpd` RPM.
-
+```bash
 
 Import the exported public key into rpm database as follows.
 [root@localhost ~]# rpm --import RPM-GPG-KEY-pmanager
@@ -319,7 +525,7 @@ Import the exported public key into rpm database as follows.
         gpg-pubkey-fd431d51-4ae0493b --> gpg(Red Hat, Inc. (release key 2) <security@redhat.com>)
         gpg-pubkey-2fa658e0-45700c69 --> gpg(Red Hat, Inc. (auxiliary key) <security@redhat.com>)
         gpg-pubkey-b74246ce-58d281c9 --> gpg(Package Manager (RPM Signing Key) <pmanager@example.com>)
-		
+```	
 ---
 You're getting:
 
@@ -335,7 +541,7 @@ Let me show you exactly how to fix it.
 
 ---
 
-# ✅ Step 1 — View your actual key
+### ✅ Step 1 — View your actual key
 
 Run:
 
@@ -366,7 +572,7 @@ F768E878CBACF31402308D024823525D0582CD71
 
 ---
 
-# ✅ Step 2 — Export using one of these correct methods
+### ✅ Step 2 — Export using one of these correct methods
 
 ### 🔹 **Option 1: Export using UID name**
 
@@ -394,7 +600,7 @@ gpg --export -a F768E878CBACF31402308D024823525D0582CD71 > RPM-GPG-KEY-jay
 
 ---
 
-# 🚀 Step 3 — Verify output file
+### 🚀 Step 3 — Verify output file
 
 ```bash
 file RPM-GPG-KEY-jay
@@ -420,7 +626,7 @@ You should see something starting with:
 
 ---
 
-# ❗ Why your command failed
+### ❗ Why your command failed
 
 You used:
 
@@ -434,7 +640,7 @@ GPG only exports keys if the name/email matches **exactly**.
 
 ---
 
-# If you want, I can also help you:
+### If you want, I can also help you:
 
 ✔ Import this key into your internal YUM repo
 ✔ Sign RPMs automatically
